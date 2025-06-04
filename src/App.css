@@ -1,0 +1,199 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #F6F4E9; 
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Container */
+.relative {
+  position: relative;
+  width: 100vw;  /* Full width of the viewport */
+  min-height: 100vh;  /* Full height to cover the screen */
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0; /* Remove border-radius for full-width */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Navbar */
+nav {
+  width: 90%;  /* Full width */
+  background-color: #cdd1c1;
+  padding: 10px 20px;
+  border-radius: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Search Input */
+input[type="text"] {
+  width: 100%;  /* Ensure the input always takes up the full width of its container */
+  max-width: 600px;  /* Limit the maximum width */
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-top: 30px;
+  box-sizing: border-box;  /* Include padding and border in the width */
+  background-color: white;
+  color: black;
+}
+
+/* Offer Details */
+.card-details {
+  width: 90%;
+  max-width: 800px;
+  padding: 15px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  color: #000;
+}
+
+/* Logo */
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logoContainer img {
+  width: 100px;
+  height: auto;
+  margin-right: 15px;
+}
+
+/* Links */
+.linksContainer {
+  display: flex;
+  gap: 20px;
+}
+
+.linksContainer a {
+  text-decoration: none;
+  color: black;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
+.linksContainer a:hover {
+  color: #007bff;
+}
+
+/* Dropdown List */
+ul {
+  position: relative;
+  width: 500px; /* Match input width */
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 9999;
+  margin-left: 20px;
+  color: black;
+}
+
+ul li {
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  list-style-type: none;
+}
+
+ul li:hover {
+  background-color: #f1f1f1;
+}
+
+/* Search container for dropdown */
+.search-container {
+  position: relative; /* This ensures the dropdown is positioned relative to the container */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 280px;
+}
+
+/* Error Message */
+.error-message {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.card-details h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #000;
+}
+
+.card-details p {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: black;
+}
+
+.card-details a {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #007bff;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.card-details a:hover {
+  background: #0056b3;
+}
+
+/* Button */
+.btn {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #39641D;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn:hover {
+  background-color: #007bff;
+}
+
+/* Responsive for screens smaller than 768px */
+@media (max-width: 768px) {
+  .relative {
+    padding: 10px;
+  }
+
+  input[type="text"] {
+    width: 100%;  /* Full width for smaller screens */
+    max-width: 400px;  /* Limit the width on smaller screens */
+  }
+}
+
+/* Responsive for screens smaller than 480px */
+@media (max-width: 480px) {
+  .relative {
+    width: 90%;
+  }
+
+  input[type="text"] {
+    width: 300px;  /* Ensure it's responsive on mobile */
+  }
+
+  ul{
+    width: 200px;
+    margin-left: 15px;
+  }
+}
