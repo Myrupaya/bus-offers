@@ -3,7 +3,7 @@ import Papa from "papaparse";
 import "./App.css";
 
 const CreditCardDropdown = () => {
-  const [cards, setCards] = useState([]); // Unique credit card names
+  const [cards, setCards] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredCards, setFilteredCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -17,9 +17,8 @@ const CreditCardDropdown = () => {
         Papa.parse(csvData, {
           header: true,
           complete: (result) => {
-            const data = result.data.filter((row) => row["Applicable cards"]); // Ensure valid data
+            const data = result.data.filter((row) => row["Applicable cards"]);
             setOffers(data);
-
             let cardNames = [...new Set(data.map((row) => row["Applicable cards"]).filter(Boolean))];
             setCards(cardNames);
           },
@@ -27,15 +26,14 @@ const CreditCardDropdown = () => {
       });
   }, []);
 
-  // Handle search input
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearch(value);
-    setErrorMessage(""); // Clear previous errors
+    setErrorMessage("");
 
     if (value === "") {
       setFilteredCards([]);
-      setSelectedCard(null); // ✅ Remove previous offers when clearing input
+      setSelectedCard(null);
       return;
     }
 
@@ -44,7 +42,6 @@ const CreditCardDropdown = () => {
     );
     setFilteredCards(filtered);
 
-    // Show error if user types a card that doesn't exist
     if (value && !filtered.length) {
       setErrorMessage("No offers found for this credit card.");
     } else {
@@ -52,7 +49,6 @@ const CreditCardDropdown = () => {
     }
   };
 
-  // Handle card selection
   const handleSelectCard = (cardName) => {
     setSearch(cardName);
     setFilteredCards([]);
@@ -69,107 +65,78 @@ const CreditCardDropdown = () => {
   };
 
   return (
-    <div className="relative w-80 p-4">
-      {/* Navbar */}
-      <nav style={styles.navbar}>
-        <div style={styles.logoContainer}>
-          <a href="https://www.myrupaya.in/">
-            <img
-              src="https://static.wixstatic.com/media/f836e8_26da4bf726c3475eabd6578d7546c3b2~mv2.jpg/v1/crop/x_124,y_0,w_3152,h_1458/fill/w_909,h_420,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/dark_logo_white_background.jpg"
-              alt="MyRupaya Logo"
-              style={styles.logo}
-            />
-          </a>
-          <div style={styles.linksContainer}>
-            <a href="https://www.myrupaya.in/" style={styles.link}>
-              Home
-            </a>
-          </div>
+    <div className="main-container">
+
+      {/* Title */}
+      <div className="title-container">
+        <h1 className="main-title">Hotel Offers</h1>
+      </div>
+
+      {/* Split Section */}
+      <div className="split-section">
+        <div className="text-section">
+          <h2>Find the Best Hotel Offers</h2>
+          <p>
+            Discover exclusive discounts and cashback offers on hotel bookings when you use your credit or debit card. 
+            Our platform aggregates the best hotel offers from multiple travel portals to help you save money on your 
+            next stay. Simply search for your card to see available offers.
+          </p>
         </div>
-      </nav>
+        <div className="image-section">
+          <img 
+            src="" 
+            alt="Hotel offers" 
+            className="responsive-image" 
+          />
+        </div>
+      </div>
 
-      {/* Search Input */}
-      <input
-        type="text"
-        value={search}
-        onChange={handleSearch}
-        placeholder="Search Credit Card..."
-        className="w-full p-2 border rounded"
-      />
-  {search && filteredCards.length > 0 && (
-    <ul>
-      {filteredCards.map((card, index) => (
-        <li
-          key={index}
-          className="hover:bg-gray-200 cursor-pointer"
-          onClick={() => handleSelectCard(card)}
-        >
-          {card}
-        </li>
-      ))}
-    </ul>
-  )}
+      {/* Search Section */}
+      <div className="search-section">
+        <input
+          type="text"
+          value={search}
+          onChange={handleSearch}
+          placeholder="Search Credit Card..."
+          className="search-input"
+        />
+        
+        {search && filteredCards.length > 0 && (
+          <ul className="dropdown-list">
+            {filteredCards.map((card, index) => (
+              <li
+                key={index}
+                className="dropdown-item"
+                onClick={() => handleSelectCard(card)}
+              >
+                {card}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      {/* Show Error Message if No Offers Found */}
-      {errorMessage && <p style={{ color: "red", fontWeight: "bold", marginTop: "10px" }}>{errorMessage}</p>}
+      {/* Error Message */}
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
 
-      {/* Display Selected Card Details */}
-{selectedCard && (
-  <div className="mt-8 p-4 border rounded shadow-md" style={{ color: "white" ,  backgroundColor: "#39641D", marginTop:"20px", padding:"20px", borderRadius:"5px"}}>
-    <h3 className="text-lg font-semibold">{selectedCard["Applicable cards"]}</h3>
-    <p><strong>Website:</strong> {selectedCard["Website"]}</p>
-    <p><strong>Offer:</strong> {selectedCard["Offers"]}</p>
-    <a
-      href={selectedCard["Offer link"]}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <button className="btn" style={{backgroundColor:"blue"}}>
-        View Offer
-      </button>
-    </a>
-  </div>
-)}
-
-
+      {/* Offer Details */}
+      {selectedCard && (
+        <div className="offer-details">
+          <h3>{selectedCard["Applicable cards"]}</h3>
+          <p><strong>Website:</strong> {selectedCard["Website"]}</p>
+          <p><strong>Offer:</strong> {selectedCard["Offers"]}</p>
+          <a
+            href={selectedCard["Offer link"]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn"
+          >
+            View Offer
+          </a>
+        </div>
+      )}
     </div>
   );
-};
-
-// Styles
-const styles = {
-  navbar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "10px 20px",
-    backgroundColor: "#CDD1C1",
-  },
-  logoContainer: {
-    display: "flex",
-    alignItems: "center",
-  },
-  logo: {
-    width: "100px",
-    height: "100px",
-    marginRight: "20px",
-  },
-  linksContainer: {
-    display: "flex",
-    gap: "35px",
-    flexWrap: "wrap",
-    marginLeft: "40px",
-  },
-  link: {
-    textDecoration: "none",
-    color: "black",
-    fontSize: "18px",
-    fontFamily: "Arial, sans-serif",
-    transition: "color 0.3s ease",
-  },
-  mobileMenuOpen: {
-    display: "block",
-  },
 };
 
 export default CreditCardDropdown;
