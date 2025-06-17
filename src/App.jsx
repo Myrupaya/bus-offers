@@ -67,30 +67,6 @@ const CreditCardDropdown = () => {
   return (
     <div className="main-container">
 
-      {/* Title */}
-      <div className="title-container">
-        <h1 className="main-title">Hotel Offers</h1>
-      </div>
-
-      {/* Split Section */}
-      <div className="split-section">
-        <div className="text-section">
-          <h2>Find the Best Hotel Offers</h2>
-          <p>
-            Discover exclusive discounts and cashback offers on hotel bookings when you use your credit or debit card. 
-            Our platform aggregates the best hotel offers from multiple travel portals to help you save money on your 
-            next stay. Simply search for your card to see available offers.
-          </p>
-        </div>
-        <div className="image-section">
-          <img 
-            src="" 
-            alt="Hotel offers" 
-            className="responsive-image" 
-          />
-        </div>
-      </div>
-
       {/* Search Section */}
       <div className="search-section">
         <input
