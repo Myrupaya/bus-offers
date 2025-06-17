@@ -4,10 +4,15 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: linear-gradient(to bottom, #999792, #cecdc9);
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+}
+
+body {
+  @apply min-h-screen;
+  background: linear-gradient(135deg, #F8F9FA 3%, #E9ECEF 100%, #CECDC9 100%);
+
 }
 
 /* Main container */
