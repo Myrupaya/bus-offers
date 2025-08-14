@@ -77,6 +77,7 @@ const CreditCardDropdown = () => {
   const [filteredCards, setFilteredCards] = useState([]);
   const [query, setQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState("");
+  const [permanentOffers, setPermanentOffers] = useState([]);
   const [abhibusOffers, setAbhibusOffers] = useState([]);
   const [cleartripOffers, setCleartripOffers] = useState([]);
   const [confirmtktOffers, setConfirmtktOffers] = useState([]);
@@ -114,6 +115,7 @@ const CreditCardDropdown = () => {
     });
   };
 
+  const selectedPermanentOffers = getOffersForCard(permanentOffers, selectedCard);
   const selectedAbhibusOffers = getOffersForCard(abhibusOffers, selectedCard);
   const selectedCleartripOffers = getOffersForCard(cleartripOffers, selectedCard);
   const selectedConfirmtktOffers = getOffersForCard(confirmtktOffers, selectedCard);
@@ -129,6 +131,7 @@ const CreditCardDropdown = () => {
 
   const hasAnyOffers = useCallback(() => {
     return (
+      selectedPermanentOffers.length > 0 ||
       selectedAbhibusOffers.length > 0 ||
       selectedCleartripOffers.length > 0 ||
       selectedConfirmtktOffers.length > 0 ||
@@ -136,6 +139,7 @@ const CreditCardDropdown = () => {
       selectedPaytmOffers.length > 0
     );
   }, [
+    selectedPermanentOffers,
     selectedAbhibusOffers,
     selectedCleartripOffers,
     selectedConfirmtktOffers,
@@ -153,7 +157,16 @@ const CreditCardDropdown = () => {
   useEffect(() => {
     const fetchCSVData = async () => {
       try {
-        const [abhibusResponse, cleartripResponse, confirmtktResponse, ixigoResponse, paytmResponse, allCardsResponse] = await Promise.all([
+        const [
+          permanentResponse,
+          abhibusResponse, 
+          cleartripResponse, 
+          confirmtktResponse, 
+          ixigoResponse, 
+          paytmResponse, 
+          allCardsResponse
+        ] = await Promise.all([
+          axios.get("/Permanent Offers.csv"),
           axios.get("/Abhibus.csv"),
           axios.get("/Cleartrip.csv"),
           axios.get("/Confirmtkt.csv"),
@@ -163,6 +176,7 @@ const CreditCardDropdown = () => {
         ]);
 
         const parseOptions = { header: true };
+        const permanentData = Papa.parse(permanentResponse.data, parseOptions);
         const abhibusData = Papa.parse(abhibusResponse.data, parseOptions);
         const cleartripData = Papa.parse(cleartripResponse.data, parseOptions);
         const confirmtktData = Papa.parse(confirmtktResponse.data, parseOptions);
@@ -170,6 +184,7 @@ const CreditCardDropdown = () => {
         const paytmData = Papa.parse(paytmResponse.data, parseOptions);
         const allCardsParsed = Papa.parse(allCardsResponse.data, parseOptions);
 
+        setPermanentOffers(permanentData.data);
         setAbhibusOffers(abhibusData.data);
         setCleartripOffers(cleartripData.data);
         setConfirmtktOffers(confirmtktData.data);
@@ -190,6 +205,7 @@ const CreditCardDropdown = () => {
           });
         };
 
+        extractCards(permanentData.data);
         extractCards(abhibusData.data);
         extractCards(cleartripData.data);
         extractCards(confirmtktData.data);
@@ -388,6 +404,30 @@ const CreditCardDropdown = () => {
 
         {selectedCard && hasAnyOffers() && (
           <div className="offer-section">
+            {/* Permanent Offers - Displayed First */}
+            {selectedPermanentOffers.length > 0 && (
+              <div className="offer-container">
+                <h2>Permanent Offers</h2>
+                <div className="offer-row">
+                  {selectedPermanentOffers.map((offer, index) => (
+                    <div 
+                      key={`permanent-${index}`} 
+                      className="offer-card permanent-offer"
+                    >
+                      {offer["Image"] && (
+                        <img 
+                          src={offer["Image"]} 
+                          alt={"Permanent Offer"} 
+                          className="offer-image" style={{height:"170px"}}
+                        />
+                      )}
+                      <p><strong>Benefit:</strong> {offer["Bus Ticket Benefit"]}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Abhibus Offers */}
             {selectedAbhibusOffers.length > 0 && (
               <div className="offer-container">
