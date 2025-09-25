@@ -226,8 +226,8 @@ const HotelOffers = () => {
     async function loadOffers() {
       const files = [
         { name: "permanent_offers.csv", setter: setPermanentOffers },
-        { name: "abhibus.csv", setter: setAbhibusOffers },
-        { name: "cleartrip.csv", setter: setCleartripOffers },
+        { name: "Abhibus.csv", setter: setAbhibusOffers },
+        { name: "Cleartrip.csv", setter: setCleartripOffers },
         { name: "goibibo.csv", setter: setGoibiboOffers },
         { name: "redbus.csv", setter: setRedbusOffers },
       ];
