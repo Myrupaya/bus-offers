@@ -35,7 +35,7 @@ body{
   box-shadow:0 6px 18px rgba(0,0,0,0.07);
   overflow:hidden;
   width:350px;                 /* was 90% — now fills column */
-  margin:0;                  /* ensure no centering by margin */
+  margin:0;                   /* ensure no centering by margin */
 }
 
 .dropdown{
@@ -183,6 +183,7 @@ ul li:hover{ background:#f0f0f0; }
     gap:22px;
   }
   .offer-card img{ height:auto; }
+  .offer-card {max-width: 280px;}
   .offer-title{ font-size:17px; }
   .offer-desc{ font-size:15px; }
   .disclaimer{ margin:28px auto 64px; }
