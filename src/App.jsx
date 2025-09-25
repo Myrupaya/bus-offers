@@ -312,14 +312,22 @@ const HotelOffers = () => {
     dIxigo.length ||
     dMakeMyTrip.length;
 
+  /** -------------------- OfferCard -------------------- */
   const OfferCard = ({ wrapper, isPermanent = false }) => {
     const o = wrapper.offer;
     const title = firstField(o, LIST_FIELDS.title) || "Offer";
     const image = firstField(o, LIST_FIELDS.image);
     const desc = firstField(o, LIST_FIELDS.desc);
-    const link = firstField(o, LIST_FIELDS.link);
     const coupon = firstField(o, LIST_FIELDS.coupon);
     const [copied, setCopied] = useState(false);
+
+    // ✅ Override links based on site
+    let link = firstField(o, LIST_FIELDS.link);
+    if (wrapper.site === "MakeMyTrip") {
+      link = "https://www.makemytrip.com/bus-tickets/";
+    } else if (wrapper.site === "Ixigo") {
+      link = "https://bus.ixigo.com/offers";
+    }
 
     const onCopy = async (text) => {
       try {
@@ -380,61 +388,57 @@ const HotelOffers = () => {
         className="dropdown"
         style={{ position: "relative", width: "600px", margin: "20px auto" }}
       >
-     <input
-  type="text"
-  value={query}
-  onChange={(e) => {
-    const val = e.target.value;
-    setQuery(val);
-    setSelected(null); // clear offers while typing
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => {
+            const val = e.target.value;
+            setQuery(val);
+            setSelected(null);
 
-    if (!val.trim()) {
-      setFilteredCards([]); // don’t open dropdown on empty input
-      return;
-    }
+            if (!val.trim()) {
+              setFilteredCards([]);
+              return;
+            }
 
-    const scored = (arr) =>
-      arr
-        .map((it) => ({ it, s: scoreCandidate(val, it.display) }))
-        .filter(({ s }) => s > 0.3)
-        .sort((a, b) => b.s - a.s)
-        .slice(0, MAX_SUGGESTIONS)
-        .map(({ it }) => it);
+            const scored = (arr) =>
+              arr
+                .map((it) => ({ it, s: scoreCandidate(val, it.display) }))
+                .filter(({ s }) => s > 0.3)
+                .sort((a, b) => b.s - a.s)
+                .slice(0, MAX_SUGGESTIONS)
+                .map(({ it }) => it);
 
-    const cc = scored(creditEntries);
-    const dc = scored(debitEntries);
+            const cc = scored(creditEntries);
+            const dc = scored(debitEntries);
 
-    const lowerVal = val.toLowerCase();
-
-    // ✅ If input contains "dc" or "debit card" → show Debit first
-    if (lowerVal.includes("dc") || lowerVal.includes("debit")) {
-      setFilteredCards([
-        ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
-        ...dc,
-        ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
-        ...cc,
-      ]);
-    } else {
-      // default order (Credit first)
-      setFilteredCards([
-        ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
-        ...cc,
-        ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
-        ...dc,
-      ]);
-    }
-  }}
-  placeholder="Type a Credit or Debit Card..."
-  className="dropdown-input"
-  style={{
-    width: "100%",
-    padding: "12px",
-    fontSize: "16px",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-  }}
-/>
-
+            const lowerVal = val.toLowerCase();
+            if (lowerVal.includes("dc") || lowerVal.includes("debit")) {
+              setFilteredCards([
+                ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
+                ...dc,
+                ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
+                ...cc,
+              ]);
+            } else {
+              setFilteredCards([
+                ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
+                ...cc,
+                ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
+                ...dc,
+              ]);
+            }
+          }}
+          placeholder="Type a Credit or Debit Card..."
+          className="dropdown-input"
+          style={{
+            width: "100%",
+            padding: "12px",
+            fontSize: "16px",
+            border: "1px solid #ccc",
+            borderRadius: "6px",
+          }}
+        />
 
         {query.trim() && !!filteredCards.length && (
           <ul
@@ -564,29 +568,13 @@ const HotelOffers = () => {
               )}
             </div>
           ) : (
-            <p
-              style={{
-                color: "red",
-                textAlign: "center",
-                marginTop: "20px",
-                
-                fontSize: "18px",
-              }}
-            >
-               No offers available for this card
+            <p style={{ color: "red", textAlign: "center", marginTop: "20px", fontSize: "18px" }}>
+              No offers available for this card
             </p>
           )
         ) : (
-          <p
-            style={{
-              color: "red",
-              textAlign: "center",
-              marginTop: "20px",
-             
-              fontSize: "18px",
-            }}
-          >
-             No such card found in our system
+          <p style={{ color: "red", textAlign: "center", marginTop: "20px", fontSize: "18px" }}>
+            No such card found in our system
           </p>
         )
       )}
