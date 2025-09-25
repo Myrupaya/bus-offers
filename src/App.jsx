@@ -215,7 +215,7 @@ const HotelOffers = () => {
         setCreditEntries(credit);
         setDebitEntries(debit);
       } catch (e) {
-        console.error("allCards.csv load error:", e);
+        console.error("allCards.csv load error:", e.message);
       }
     }
     loadAllCards();
@@ -224,24 +224,27 @@ const HotelOffers = () => {
   // Load offers
   useEffect(() => {
     async function loadOffers() {
-      try {
-        const files = [
-          { name: "permanent_offers.csv", setter: setPermanentOffers },
-          { name: "abhibus.csv", setter: setAbhibusOffers },
-          { name: "cleartrip.csv", setter: setCleartripOffers },
-          { name: "goibibo.csv", setter: setGoibiboOffers },
-          { name: "redbus.csv", setter: setRedbusOffers },
-        ];
-        await Promise.all(
-          files.map(async (f) => {
+      const files = [
+        { name: "permanent_offers.csv", setter: setPermanentOffers },
+        { name: "abhibus.csv", setter: setAbhibusOffers },
+        { name: "cleartrip.csv", setter: setCleartripOffers },
+        { name: "goibibo.csv", setter: setGoibiboOffers },
+        { name: "redbus.csv", setter: setRedbusOffers },
+      ];
+
+      await Promise.all(
+        files.map(async (f) => {
+          try {
             const res = await axios.get(`/${encodeURIComponent(f.name)}`);
             const parsed = Papa.parse(res.data, { header: true });
             f.setter(parsed.data || []);
-          })
-        );
-      } catch (e) {
-        console.error("Offer CSV load error:", e);
-      }
+            console.log(`Loaded ${f.name} ✅`);
+          } catch (e) {
+            console.warn(`Skipping ${f.name}: ${e.message}`);
+            f.setter([]); // skip gracefully
+          }
+        })
+      );
     }
     loadOffers();
   }, []);
