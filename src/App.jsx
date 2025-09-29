@@ -13,6 +13,7 @@ const LIST_FIELDS = {
   desc: ["Description", "Details", "Offer Description", "Flight Benefit"],
   coupon: ["Coupon code", "Coupon", "Code"],
 
+  // For permanent/inbuilt section (bus)
   permanentCCName: ["Eligible Credit Cards"],
   permanentBenefit: [
     "Bus Ticket Benefit",
@@ -179,7 +180,11 @@ const HotelOffers = () => {
   const [goibiboOffers, setGoibiboOffers] = useState([]);
   const [redbusOffers, setRedbusOffers] = useState([]);
 
-  // Load allCards.csv
+  // NEW: chip strips (from offer CSVs only)
+  const [marqueeCC, setMarqueeCC] = useState([]); // credit bases with offers
+  const [marqueeDC, setMarqueeDC] = useState([]); // debit bases with offers
+
+  // Load allCards.csv (for dropdown only)
   useEffect(() => {
     async function loadAllCards() {
       try {
@@ -221,7 +226,7 @@ const HotelOffers = () => {
     loadAllCards();
   }, []);
 
-  // Load offers
+  // Load offers CSVs
   useEffect(() => {
     async function loadOffers() {
       const files = [
@@ -238,7 +243,6 @@ const HotelOffers = () => {
             const res = await axios.get(`/${encodeURIComponent(f.name)}`);
             const parsed = Papa.parse(res.data, { header: true });
             f.setter(parsed.data || []);
-            console.log(`Loaded ${f.name} ✅`);
           } catch (e) {
             console.warn(`Skipping ${f.name}: ${e.message}`);
             f.setter([]); // skip gracefully
@@ -248,6 +252,47 @@ const HotelOffers = () => {
     }
     loadOffers();
   }, []);
+
+  // Build chip strips (from offers only)
+  useEffect(() => {
+    const ccMap = new Map(); // baseNorm -> display
+    const dcMap = new Map();
+
+    const harvestList = (val, map) => {
+      for (const raw of splitList(val)) {
+        const base = brandCanonicalize(getBase(raw));
+        const baseNorm = toNorm(base);
+        if (baseNorm) map.set(baseNorm, map.get(baseNorm) || base);
+      }
+    };
+
+    const harvestRows = (rows) => {
+      for (const o of rows || []) {
+        const ccField = firstField(o, LIST_FIELDS.credit);
+        if (ccField) harvestList(ccField, ccMap);
+        const dcField = firstField(o, LIST_FIELDS.debit);
+        if (dcField) harvestList(dcField, dcMap);
+      }
+    };
+
+    harvestRows(abhibusOffers);
+    harvestRows(cleartripOffers);
+    harvestRows(goibiboOffers);
+    harvestRows(redbusOffers);
+
+    // Permanent: treat eligible credit cards as CC bases
+    for (const o of permanentOffers || []) {
+      const nm = firstField(o, LIST_FIELDS.permanentCCName);
+      if (nm) {
+        const base = brandCanonicalize(getBase(nm));
+        const baseNorm = toNorm(base);
+        if (baseNorm) ccMap.set(baseNorm, ccMap.get(baseNorm) || base);
+      }
+    }
+
+    setMarqueeCC(Array.from(ccMap.values()).sort((a, b) => a.localeCompare(b)));
+    setMarqueeDC(Array.from(dcMap.values()).sort((a, b) => a.localeCompare(b)));
+  }, [abhibusOffers, cleartripOffers, goibiboOffers, redbusOffers, permanentOffers]);
 
   function matchesFor(offers, type, site) {
     if (!selected) return [];
@@ -303,6 +348,7 @@ const HotelOffers = () => {
   const dGoibibo = dedupWrappers(wGoibibo, seen);
   const dRedbus = dedupWrappers(wRedbus, seen);
 
+  // extra mapped sections (as in your code)
   const dIxigo = dAbhibus.map((w) => ({ ...w, site: "Ixigo" }));
   const dMakeMyTrip = dRedbus.map((w) => ({ ...w, site: "MakeMyTrip" }));
 
@@ -315,6 +361,15 @@ const HotelOffers = () => {
     dIxigo.length ||
     dMakeMyTrip.length;
 
+  // Chip click → select that card immediately
+  const handleChipClick = (name, type) => {
+    const display = brandCanonicalize(getBase(name));
+    const baseNorm = toNorm(display);
+    setQuery(display);
+    setSelected({ type, display, baseNorm });
+    setFilteredCards([]);
+  };
+
   /** -------------------- OfferCard -------------------- */
   const OfferCard = ({ wrapper, isPermanent = false }) => {
     const o = wrapper.offer;
@@ -324,7 +379,7 @@ const HotelOffers = () => {
     const coupon = firstField(o, LIST_FIELDS.coupon);
     const [copied, setCopied] = useState(false);
 
-    // ✅ Override links based on site
+    // Override links based on site
     let link = firstField(o, LIST_FIELDS.link);
     if (wrapper.site === "MakeMyTrip") {
       link = "https://www.makemytrip.com/bus-tickets/";
@@ -386,6 +441,103 @@ const HotelOffers = () => {
 
   return (
     <div className="App">
+      {/* 🔹 Cards-with-offers strip (matches your Hotel/Airline look) */}
+      {(marqueeCC.length > 0 || marqueeDC.length > 0) && (
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "14px auto 0",
+            padding: "14px 16px",
+            background: "#F7F9FC",
+            border: "1px solid #E8EDF3",
+            borderRadius: 10,
+            boxShadow: "0 6px 18px rgba(15,23,42,.06)",
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 16,
+              color: "#1F2D45",
+              marginBottom: 10,
+              display: "flex",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <span>Credit And Debit Cards Which Have Offers</span>
+          </div>
+
+          {/* CC marquee chips */}
+          {marqueeCC.length > 0 && (
+            <marquee direction="left" scrollAmount="4" style={{ marginBottom: 8, whiteSpace: "nowrap" }}>
+              <strong style={{ marginRight: 10, color: "#1F2D45" }}>Credit Cards:</strong>
+              {marqueeCC.map((name, idx) => (
+                <span
+                  key={`cc-chip-${idx}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleChipClick(name, "credit")}
+                  onKeyDown={(e) => (e.key === "Enter" ? handleChipClick(name, "credit") : null)}
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 10px",
+                    border: "1px solid #E0E6EE",
+                    borderRadius: 9999,
+                    marginRight: 8,
+                    background: "#fff",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    lineHeight: 1.2,
+                    userSelect: "none",
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.background = "#F0F5FF")}
+                  onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
+                  title="Click to select this card"
+                >
+                  {name}
+                </span>
+              ))}
+            </marquee>
+          )}
+
+          {/* DC marquee chips */}
+          {marqueeDC.length > 0 && (
+            <marquee direction="left" scrollAmount="4" style={{ whiteSpace: "nowrap" }}>
+              <strong style={{ marginRight: 10, color: "#1F2D45" }}>Debit Cards:</strong>
+              {marqueeDC.map((name, idx) => (
+                <span
+                  key={`dc-chip-${idx}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleChipClick(name, "debit")}
+                  onKeyDown={(e) => (e.key === "Enter" ? handleChipClick(name, "debit") : null)}
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 10px",
+                    border: "1px solid #E0E6EE",
+                    borderRadius: 9999,
+                    marginRight: 8,
+                    background: "#fff",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    lineHeight: 1.2,
+                    userSelect: "none",
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.background = "#F0F5FF")}
+                  onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
+                  title="Click to select this card"
+                >
+                  {name}
+                </span>
+              ))}
+            </marquee>
+          )}
+        </div>
+      )}
+
       {/* Search / Dropdown */}
       <div
         className="dropdown"
@@ -500,71 +652,77 @@ const HotelOffers = () => {
           hasAny ? (
             <div className="offers-section">
               {!!dPermanent.length && (
-                <div>
+                <div className="offer-group">
                   <h2>Permanent Offers</h2>
                   <div className="offer-grid">
                     {dPermanent.map((w, i) => (
-                      <OfferCard key={i} wrapper={w} isPermanent />
+                      <OfferCard key={`perm-${i}`} wrapper={w} isPermanent />
                     ))}
                   </div>
                 </div>
               )}
+
               {!!dAbhibus.length && (
-                <div>
+                <div className="offer-group">
                   <h2>Offers on Abhibus</h2>
                   <div className="offer-grid">
                     {dAbhibus.map((w, i) => (
-                      <OfferCard key={i} wrapper={w} />
+                      <OfferCard key={`abh-${i}`} wrapper={w} />
                     ))}
                   </div>
                 </div>
               )}
+
               {!!dIxigo.length && (
-                <div>
+                <div className="offer-group">
                   <h2>Offers on Ixigo</h2>
                   <div className="offer-grid">
                     {dIxigo.map((w, i) => (
-                      <OfferCard key={i} wrapper={w} />
+                      <OfferCard key={`ixi-${i}`} wrapper={w} />
                     ))}
                   </div>
                 </div>
               )}
+
               {!!dCleartrip.length && (
-                <div>
+                <div className="offer-group">
                   <h2>Offers on Cleartrip</h2>
                   <div className="offer-grid">
                     {dCleartrip.map((w, i) => (
-                      <OfferCard key={i} wrapper={w} />
+                      <OfferCard key={`ct-${i}`} wrapper={w} />
                     ))}
                   </div>
                 </div>
               )}
+
               {!!dGoibibo.length && (
-                <div>
+                <div className="offer-group">
                   <h2>Offers on Goibibo</h2>
                   <div className="offer-grid">
                     {dGoibibo.map((w, i) => (
-                      <OfferCard key={i} wrapper={w} />
+                      <OfferCard key={`go-${i}`} wrapper={w} />
                     ))}
                   </div>
                 </div>
               )}
+
               {!!dRedbus.length && (
-                <div>
+                <div className="offer-group">
                   <h2>Offers on Redbus</h2>
                   <div className="offer-grid">
                     {dRedbus.map((w, i) => (
-                      <OfferCard key={i} wrapper={w} />
+                      <OfferCard key={`rb-${i}`} wrapper={w} />
                     ))}
                   </div>
                 </div>
               )}
+
               {!!dMakeMyTrip.length && (
-                <div>
+                <div className="offer-group">
                   <h2>Offers on MakeMyTrip</h2>
                   <div className="offer-grid">
                     {dMakeMyTrip.map((w, i) => (
-                      <OfferCard key={i} wrapper={w} />
+                      <OfferCard key={`mmt-${i}`} wrapper={w} />
                     ))}
                   </div>
                 </div>
