@@ -4,17 +4,32 @@ body{
   color:#333;
   margin:0;
   padding:0;
-  background: linear-gradient(135deg,#F8F9FA 3%,#E9ECEF 100%,#CECDC9 100%);
+  background: linear-gradient(
+    135deg,
+    #F8F9FA 3%,
+    #E9ECEF 100%,
+    #CECDC9 100%
+  );
 }
 
-.App{ text-align:center; padding:20px; }
+.App{
+  text-align:center;
+  padding:20px;
+  font-family:'Libre Baskerville', serif;
+}
 
 /* ----------------  Section & Titles  ---------------- */
-.offers-section{margin:0 auto; padding:20px; }
+.offers-section{
+  margin:0 auto;
+  padding:20px;
+}
 
-.offer-group{ margin:24px 0 8px; }
+.offer-group{
+  margin:24px 0 8px;
+}
+
 .offer-group > h2{
-  text-align:center;                /* centered section headings */
+  text-align:center;
   font-weight:700;
   font-size:27px;
   margin:6px 0 22px;
@@ -25,46 +40,36 @@ body{
   display:grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap:32px;
-  justify-items: stretch;     /* grid areas stretch full column width */
+  justify-items:stretch;
   align-items:stretch;
 }
+
 .offer-card{
   background:#fff;
   border-radius:12px;
   border:1px solid #eee;
   box-shadow:0 6px 18px rgba(0,0,0,0.07);
   overflow:hidden;
-  width:350px;                 /* was 90% — now fills column */
-  margin:0;                   /* ensure no centering by margin */
+  width:350px;
+  margin:0;
+  max-width:100%;
 }
 
-.dropdown{
-  position: relative;
-  max-width: 600px;
-  margin: 20px auto;         /* centers it */
-}
-
-.offer-card img{
+/* Main offer image */
+.offer-img{
   width:100%;
   height:220px;
   object-fit:cover;
   display:block;
 }
 
-.coupon-row{
-  display:flex;
-  align-items:center;
-  justify-content:center;     /* center horizontally */
-  gap:8px;
-  margin:8px 0;
-}
-
-.coupon-code{
-  padding:6px 10px;
-  border:1px dashed #ccc;
-  border-radius:6px;
-  font-size:14px;
-  background:#f9f9f9;
+/* When we're showing a site logo fallback, don't crop it */
+.offer-img.is-fallback{
+  background:#fff;
+  object-fit:contain;
+  padding:16px;
+  height:220px;
+  box-sizing:border-box;
 }
 
 .offer-info{
@@ -87,8 +92,29 @@ body{
   margin:0 0 10px 0;
 }
 
+.coupon-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:8px 0;
+}
+
+.coupon-code{
+  padding:6px 10px;
+  border:1px dashed #ccc;
+  border-radius:6px;
+  font-size:14px;
+  background:#f9f9f9;
+  font-family: monospace;
+}
+
 /* permanent offers extra line */
-.inbuilt-note{ margin:4px 0 10px; font-size:15px; }
+.inbuilt-note{
+  margin:4px 0 10px;
+  font-size:15px;
+  font-weight:500;
+}
 
 .network-note{
   color:#d32f2f;
@@ -105,39 +131,37 @@ body{
   border-radius:8px;
   cursor:pointer;
   font-weight:700;
+  font-size:14px;
 }
-.btn:hover{ filter:brightness(0.95); }
+.btn:hover{
+  filter:brightness(0.95);
+}
 
 /* ----------------  Dropdown  ---------------- */
+.dropdown{
+  position: relative;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
 .dropdown-input:focus{
   outline:none;
   border-color:#7a8cff;
   box-shadow:0 0 0 3px rgba(122,140,255,.15);
 }
 
-/* Only styling helpers; the list itself is rendered inline from JS */
-ul{
-  list-style:none;
-  margin:0;
-  padding:0;
-  max-height:260px;
-  overflow-y:auto;
-  border:1px solid #ccc;
-  border-radius:6px;
-  background:#fff;
-  position:absolute;
-  z-index:1000;
-  width:100%;
+/* The UL we render for results */
+.dropdown-list{
+  /* styles assigned inline too, but we keep base here */
 }
-ul li{
-  padding:10px;
-  cursor:pointer;
-  border-bottom:1px solid #eee;
+.dropdown-list li{
   transition:background-color .2s ease;
 }
-ul li:hover{ background:#f0f0f0; }
+.dropdown-list li:hover{
+  background:#f0f0f0;
+}
 
-/* ----------------  Disclaimer (as before)  ---------------- */
+/* ----------------  Disclaimer  ---------------- */
 .disclaimer{
   max-width:900px;
   margin:36px auto 84px;
@@ -173,20 +197,54 @@ ul li:hover{ background:#f0f0f0; }
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap:28px;
   }
-  .offer-card img{ height:200px; }
+  .offer-img{
+    height:200px;
+  }
+  .offer-img.is-fallback{
+    height:200px;
+  }
 }
 
 @media (max-width: 768px){
-  .dropdown{ max-width:90%; margin:0 auto; }
-  .offer-grid{
-    grid-template-columns: 1fr;     /* single column like your mobile screenshot */
-    gap:22px;
+  .dropdown{
+    max-width:90%;
+    margin:0 auto;
   }
-  .offer-card img{ height:auto; }
-  .offer-card {max-width: 280px;}
-  .offer-title{ font-size:17px; }
-  .offer-desc{ font-size:15px; }
-  .disclaimer{ margin:28px auto 64px; }
-  .disclaimer h3{ font-size:20px; }
-  .disclaimer p{ font-size:14.5px; line-height:1.7; }
+
+  .offer-grid{
+    grid-template-columns: 1fr;
+    gap:22px;
+    justify-items:center;
+  }
+
+  .offer-card{
+    max-width: 280px;
+    width:100%;
+  }
+
+  .offer-img{
+    height:auto;
+  }
+  .offer-img.is-fallback{
+    height:auto;
+    padding:20px;
+  }
+
+  .offer-title{
+    font-size:17px;
+  }
+  .offer-desc{
+    font-size:15px;
+  }
+
+  .disclaimer{
+    margin:28px auto 64px;
+  }
+  .disclaimer h3{
+    font-size:20px;
+  }
+  .disclaimer p{
+    font-size:14.5px;
+    line-height:1.7;
+  }
 }
