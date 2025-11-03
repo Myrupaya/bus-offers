@@ -27,28 +27,22 @@ const LIST_FIELDS = {
 const MAX_SUGGESTIONS = 50;
 
 /** -------------------- FALLBACK IMAGES BY SITE -------------------- */
-/* If the CSV row doesn't have a usable image, or the image 404s,
-   we'll swap in the site logo you specified. */
 const FALLBACK_IMAGE_BY_SITE = {
   abhibus:
     "https://play-lh.googleusercontent.com/ZgBXowR57R5sLG3BmzrVDYH5f-3I18IMUl1IDGwUOPmGejvN0lzRYCSYsVNDSUW0H51M",
-
   cleartrip:
     "https://bottindia.com/wp-content/uploads/2023/09/Cleartrip.webp",
-
   goibibo:
     "https://jsak.goibibo.com/pwa_v3/pwa_growth/images/og-goibibo.aba291ed.png",
-
   redbus:
     "https://play-lh.googleusercontent.com/2sknePPj33W1Iu2tZbDFario3G7kpIJFkKYm9VgGnQYKzn_WJygKFihJkZTx8H7sb0o",
-
-  // we also render some mapped sections ("Ixigo", "MakeMyTrip") even though those
-  // aren't directly from CSV, so give them a fallback too:
   ixigo:
     "https://assets.ixigo.com/image/upload/f_auto/ixigo-logo-1708608265.png",
-
   makemytrip:
     "https://static6.makeMyTrip.com/images/common/mmtLogoWhite.png",
+  // new confirmtkt logo
+  confirmtkt:
+    "https://travelmail.in/wp-content/uploads/2018/07/ConfirmTkt-Logo.jpeg",
 };
 
 /** -------------------- HELPERS -------------------- */
@@ -222,27 +216,23 @@ const Disclaimer = () => (
 
 /** -------------------- COMPONENT -------------------- */
 const HotelOffers = () => {
-  // dropdown data (from allCards.csv ONLY)
   const [creditEntries, setCreditEntries] = useState([]);
   const [debitEntries, setDebitEntries] = useState([]);
 
-  // search UI
   const [filteredCards, setFilteredCards] = useState([]);
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState(null); // {type, display, baseNorm}
+  const [selected, setSelected] = useState(null);
 
-  // offer CSV data
   const [permanentOffers, setPermanentOffers] = useState([]);
   const [abhibusOffers, setAbhibusOffers] = useState([]);
   const [cleartripOffers, setCleartripOffers] = useState([]);
   const [goibiboOffers, setGoibiboOffers] = useState([]);
   const [redbusOffers, setRedbusOffers] = useState([]);
 
-  // chips under marquee (built from offer CSVs only, not allCards)
-  const [marqueeCC, setMarqueeCC] = useState([]); // credit cards with offers
-  const [marqueeDC, setMarqueeDC] = useState([]); // debit cards with offers
+  const [marqueeCC, setMarqueeCC] = useState([]);
+  const [marqueeDC, setMarqueeDC] = useState([]);
 
-  // Load allCards.csv for dropdown only
+  // load allCards.csv
   useEffect(() => {
     async function loadAllCards() {
       try {
@@ -287,7 +277,7 @@ const HotelOffers = () => {
     loadAllCards();
   }, []);
 
-  // Load offer CSVs
+  // load offer csvs
   useEffect(() => {
     async function loadOffers() {
       const files = [
@@ -317,7 +307,7 @@ const HotelOffers = () => {
     loadOffers();
   }, []);
 
-  // Build marquee chips from offers (not from allCards)
+  // build marquee chips
   useEffect(() => {
     const ccMap = new Map();
     const dcMap = new Map();
@@ -340,13 +330,11 @@ const HotelOffers = () => {
       }
     };
 
-    // ingest each site’s CSV
     harvestRows(abhibusOffers);
     harvestRows(cleartripOffers);
     harvestRows(goibiboOffers);
     harvestRows(redbusOffers);
 
-    // Permanent card benefits (credit side)
     for (const o of permanentOffers || []) {
       const nm = firstField(o, LIST_FIELDS.permanentCCName);
       if (nm) {
@@ -364,7 +352,7 @@ const HotelOffers = () => {
     );
   }, [abhibusOffers, cleartripOffers, goibiboOffers, redbusOffers, permanentOffers]);
 
-  /** Given CSV rows, collect matches for the selected card */
+  /** collect matches for selected card */
   function matchesFor(offers, type, site) {
     if (!selected) return [];
     const out = [];
@@ -390,7 +378,7 @@ const HotelOffers = () => {
     return out;
   }
 
-  // build wrapper arrays per site
+  // per-site wrappers
   const wPermanent = matchesFor(permanentOffers, "permanent", "Permanent");
   const wAbhibus = matchesFor(
     abhibusOffers,
@@ -413,11 +401,12 @@ const HotelOffers = () => {
     "Redbus"
   );
 
-  // we also create virtual sections Ixigo and MakeMyTrip from Abhibus/Redbus logic
+  // virtual sections
   const dIxigo = wAbhibus.map((w) => ({ ...w, site: "Ixigo" }));
+  const dConfirmTkt = wAbhibus.map((w) => ({ ...w, site: "Confirmtkt" }));
   const dMakeMyTrip = wRedbus.map((w) => ({ ...w, site: "MakeMyTrip" }));
 
-  // dedupe across everything while preserving first occurrence
+  // GLOBAL dedup for real sources
   const seen = new Set();
   const dPermanent =
     selected?.type === "credit" ? dedupWrappers(wPermanent, seen) : [];
@@ -425,8 +414,11 @@ const HotelOffers = () => {
   const dCleartrip = dedupWrappers(wCleartrip, seen);
   const dGoibibo = dedupWrappers(wGoibibo, seen);
   const dRedbus = dedupWrappers(wRedbus, seen);
-  const dIxigoDeduped = dedupWrappers(dIxigo, seen);
-  const dMakeMyTripDeduped = dedupWrappers(dMakeMyTrip, seen);
+
+  // VIRTUAL sections must not be removed because originals showed them
+  const dIxigoDeduped = dedupWrappers(dIxigo, new Set());
+  const dConfirmTktDeduped = dedupWrappers(dConfirmTkt, new Set());
+  const dMakeMyTripDeduped = dedupWrappers(dMakeMyTrip, new Set());
 
   const hasAny =
     dPermanent.length ||
@@ -435,9 +427,9 @@ const HotelOffers = () => {
     dGoibibo.length ||
     dRedbus.length ||
     dIxigoDeduped.length ||
+    dConfirmTktDeduped.length ||
     dMakeMyTripDeduped.length;
 
-  /** Chip click → select card immediately */
   const handleChipClick = (name, type) => {
     const display = brandCanonicalize(getBase(name));
     const baseNorm = toNorm(display);
@@ -446,20 +438,14 @@ const HotelOffers = () => {
     setFilteredCards([]);
   };
 
-  /** -------------------- OfferCard -------------------- */
   const OfferCard = ({ wrapper, isPermanent = false }) => {
     const o = wrapper.offer;
-
-    // base fields
     const title = firstField(o, LIST_FIELDS.title) || "Offer";
     const rawImage = firstField(o, LIST_FIELDS.image);
     const desc = firstField(o, LIST_FIELDS.desc);
     const coupon = firstField(o, LIST_FIELDS.coupon);
-
-    // derive partner site key ("abhibus", "cleartrip", etc) from wrapper.site
     const siteKey = String(wrapper.site || "").toLowerCase();
 
-    // build final CTA link
     let link = firstField(o, LIST_FIELDS.link);
     if (siteKey === "makemytrip") {
       link = "https://www.makemytrip.com/bus-tickets/";
@@ -467,10 +453,10 @@ const HotelOffers = () => {
       link = "https://bus.ixigo.com/offers";
     }
 
-    // pick display image with fallback to partner logo
     const wantsFallbackLogic = [
       "abhibus",
       "ixigo",
+      "confirmtkt",
       "cleartrip",
       "goibibo",
       "redbus",
@@ -481,7 +467,6 @@ const HotelOffers = () => {
       ? resolveImage(siteKey, rawImage)
       : { src: rawImage, usingFallback: false };
 
-    // copy coupon helper
     const [copied, setCopied] = useState(false);
     async function onCopy(text) {
       try {
@@ -493,7 +478,6 @@ const HotelOffers = () => {
       }
     }
 
-    // permanent (built-in benefit of the card)
     if (isPermanent) {
       const permanentBenefit = firstField(o, LIST_FIELDS.permanentBenefit);
       return (
@@ -508,7 +492,6 @@ const HotelOffers = () => {
               }
             />
           )}
-
           <div className="offer-info">
             {permanentBenefit && (
               <p className="offer-desc">{permanentBenefit}</p>
@@ -521,7 +504,6 @@ const HotelOffers = () => {
       );
     }
 
-    // normal partner offer card
     return (
       <div className="offer-card">
         {imgSrc && (
@@ -559,7 +541,6 @@ const HotelOffers = () => {
     );
   };
 
-  /** -------------------- Search box handler -------------------- */
   function handleSearchChange(val) {
     setQuery(val);
     setSelected(null);
@@ -601,10 +582,8 @@ const HotelOffers = () => {
     );
   }
 
-  /** -------------------- RENDER -------------------- */
   return (
     <div className="App">
-      {/* marquee with clickable chips */}
       {(marqueeCC.length > 0 || marqueeDC.length > 0) && (
         <div
           style={{
@@ -631,7 +610,6 @@ const HotelOffers = () => {
             <span>Credit And Debit Cards Which Have Offers</span>
           </div>
 
-          {/* Credit cards marquee */}
           {marqueeCC.length > 0 && (
             <marquee
               direction="left"
@@ -679,7 +657,6 @@ const HotelOffers = () => {
             </marquee>
           )}
 
-          {/* Debit cards marquee */}
           {marqueeDC.length > 0 && (
             <marquee
               direction="left"
@@ -729,8 +706,10 @@ const HotelOffers = () => {
         </div>
       )}
 
-      {/* Search / Dropdown */}
-      <div className="dropdown" style={{ position: "relative", width: "600px", margin: "20px auto" }}>
+      <div
+        className="dropdown"
+        style={{ position: "relative", width: "600px", margin: "20px auto" }}
+      >
         <input
           type="text"
           value={query}
@@ -797,9 +776,8 @@ const HotelOffers = () => {
         )}
       </div>
 
-      {/* Offer sections */}
-      {query.trim() && (
-        selected ? (
+      {query.trim() &&
+        (selected ? (
           hasAny ? (
             <div className="offers-section">
               {!!dPermanent.length && (
@@ -807,11 +785,7 @@ const HotelOffers = () => {
                   <h2>Permanent Offers</h2>
                   <div className="offer-grid">
                     {dPermanent.map((w, i) => (
-                      <OfferCard
-                        key={`perm-${i}`}
-                        wrapper={w}
-                        isPermanent
-                      />
+                      <OfferCard key={`perm-${i}`} wrapper={w} isPermanent />
                     ))}
                   </div>
                 </div>
@@ -834,6 +808,17 @@ const HotelOffers = () => {
                   <div className="offer-grid">
                     {dIxigoDeduped.map((w, i) => (
                       <OfferCard key={`ixi-${i}`} wrapper={w} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!!dConfirmTktDeduped.length && (
+                <div className="offer-group">
+                  <h2>Offers on Confirmtkt</h2>
+                  <div className="offer-grid">
+                    {dConfirmTktDeduped.map((w, i) => (
+                      <OfferCard key={`ctkt-${i}`} wrapper={w} />
                     ))}
                   </div>
                 </div>
@@ -906,8 +891,7 @@ const HotelOffers = () => {
           >
             No such card found in our system
           </p>
-        )
-      )}
+        ))}
 
       <Disclaimer />
     </div>
