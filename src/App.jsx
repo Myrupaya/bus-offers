@@ -39,7 +39,7 @@ const FALLBACK_IMAGE_BY_SITE = {
   ixigo:
     "https://assets.ixigo.com/image/upload/f_auto/ixigo-logo-1708608265.png",
   makemytrip:
-    "https://static6.makeMyTrip.com/images/common/mmtLogoWhite.png",
+    "https://cdn.gadgets360.com/pricee/assets/store/makemytrip-1200x800.png",
   // new confirmtkt logo
   confirmtkt:
     "https://travelmail.in/wp-content/uploads/2018/07/ConfirmTkt-Logo.jpeg",
