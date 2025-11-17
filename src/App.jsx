@@ -133,6 +133,35 @@ function scoreCandidate(q, cand) {
   return (matchingWords / Math.max(1, qWords.length)) * 0.7 + sim * 0.3;
 }
 
+/** 🔹 Fuzzy name matcher (handles typos like "selct" ≈ "select") */
+function isFuzzyNameMatch(query, label) {
+  const q = toNorm(query);
+  const l = toNorm(label);
+  if (!q || !l) return false;
+
+  // direct substring
+  if (l.includes(q)) return true;
+
+  // whole-string similarity
+  const wholeDist = lev(q, l);
+  const wholeSim = 1 - wholeDist / Math.max(q.length, l.length);
+  if (wholeSim >= 0.6) return true;
+
+  // per-word similarity (e.g. "selct" ≈ "select")
+  const qWords = q.split(" ").filter(Boolean);
+  const lWords = l.split(" ").filter(Boolean);
+  for (const qw of qWords) {
+    if (qw.length < 3) continue;
+    for (const lw of lWords) {
+      if (lw.length < 3) continue;
+      const d = lev(qw, lw);
+      const sim = 1 - d / Math.max(qw.length, lw.length);
+      if (sim >= 0.7) return true;
+    }
+  }
+  return false;
+}
+
 /** Dropdown entry builder */
 function makeEntry(raw, type) {
   const base = brandCanonicalize(getBase(raw));
@@ -541,6 +570,7 @@ const HotelOffers = () => {
     );
   };
 
+  /** 🔹 UPDATED search: fuzzy + Select boost + Debit-first logic */
   function handleSearchChange(val) {
     setQuery(val);
     setSelected(null);
@@ -550,20 +580,74 @@ const HotelOffers = () => {
       return;
     }
 
+    const trimmed = val.trim();
+    const qLower = trimmed.toLowerCase();
+
     const scored = (arr) =>
       arr
-        .map((it) => ({ it, s: scoreCandidate(val, it.display) }))
-        .filter(({ s }) => s > 0.3)
-        .sort((a, b) => b.s - a.s)
+        .map((it) => {
+          const baseScore = scoreCandidate(trimmed, it.display);
+          const inc = it.display.toLowerCase().includes(qLower);
+          const fuzzy = isFuzzyNameMatch(trimmed, it.display);
+
+          let s = baseScore;
+          if (inc) s += 2.0;   // strong boost if query is substring
+          if (fuzzy) s += 1.5; // boost typo-ish matches
+
+          return { it, s, inc, fuzzy };
+        })
+        .filter(({ s, inc, fuzzy }) => inc || fuzzy || s > 0.3)
+        .sort((a, b) => b.s - a.s || a.it.display.localeCompare(b.it.display))
         .slice(0, MAX_SUGGESTIONS)
         .map(({ it }) => it);
 
-    const cc = scored(creditEntries);
-    const dc = scored(debitEntries);
+    let cc = scored(creditEntries);
+    let dc = scored(debitEntries);
 
-    const lv = val.toLowerCase();
+    // If nothing matches, clear suggestions
+    if (!cc.length && !dc.length) {
+      setFilteredCards([]);
+      return;
+    }
+
+    /** --- SPECIAL CASE 1: "select credit card" / typo like "selct" → move Select cards first --- */
+    const qNorm = toNorm(trimmed);
+    const qWords = qNorm.split(" ").filter(Boolean);
+
+    const hasSelectWord = qWords.some((w) => {
+      if (w === "select") return true;
+      if (w.length < 3) return false;
+      const d = lev(w, "select");
+      const sim = 1 - d / Math.max(w.length, "select".length);
+      return sim >= 0.7; // "selct", "selec", "slect", etc.
+    });
+
+    const isSelectIntent =
+      qNorm.includes("select credit card") ||
+      qNorm.includes("select card") ||
+      hasSelectWord;
+
+    if (isSelectIntent) {
+      const reorderBySelect = (arr) => {
+        const selectCards = [];
+        const others = [];
+        arr.forEach((item) => {
+          const labelNorm = toNorm(item.display);
+          if (labelNorm.includes("select")) selectCards.push(item);
+          else others.push(item);
+        });
+        return [...selectCards, ...others];
+      };
+      cc = reorderBySelect(cc);
+      dc = reorderBySelect(dc);
+    }
+
+    /** --- SPECIAL CASE 2: query contains "dc" / "debit" / "debit card" → Debit Cards first --- */
+    const lv = qLower;
     const debitIntent =
-      lv.includes("debit") || lv.includes("dc") || lv.includes("debit card");
+      lv.includes("debit card") ||
+      lv.includes("debit") ||
+      lv.includes("dc"); // substring, not just whole word
 
     setFilteredCards(
       debitIntent
