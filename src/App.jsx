@@ -257,6 +257,7 @@ const HotelOffers = () => {
   const [cleartripOffers, setCleartripOffers] = useState([]);
   const [goibiboOffers, setGoibiboOffers] = useState([]);
   const [redbusOffers, setRedbusOffers] = useState([]);
+  const [makemytripOffers, setMakemytripOffers] = useState([]); // ✅ NEW STATE
 
   const [marqueeCC, setMarqueeCC] = useState([]);
   const [marqueeDC, setMarqueeDC] = useState([]);
@@ -315,6 +316,7 @@ const HotelOffers = () => {
         { name: "Cleartrip.csv", setter: setCleartripOffers },
         { name: "goibibo.csv", setter: setGoibiboOffers },
         { name: "redbus.csv", setter: setRedbusOffers },
+        { name: "makemytrip.csv", setter: setMakemytripOffers }, // ✅ NEW FILE
       ];
 
       await Promise.all(
@@ -363,6 +365,7 @@ const HotelOffers = () => {
     harvestRows(cleartripOffers);
     harvestRows(goibiboOffers);
     harvestRows(redbusOffers);
+    harvestRows(makemytripOffers); // ✅ INCLUDE MMT IN MARQUEE
 
     for (const o of permanentOffers || []) {
       const nm = firstField(o, LIST_FIELDS.permanentCCName);
@@ -379,7 +382,14 @@ const HotelOffers = () => {
     setMarqueeDC(
       Array.from(dcMap.values()).sort((a, b) => a.localeCompare(b))
     );
-  }, [abhibusOffers, cleartripOffers, goibiboOffers, redbusOffers, permanentOffers]);
+  }, [
+    abhibusOffers,
+    cleartripOffers,
+    goibiboOffers,
+    redbusOffers,
+    makemytripOffers, // ✅ DEPENDENCY
+    permanentOffers,
+  ]);
 
   /** collect matches for selected card */
   function matchesFor(offers, type, site) {
@@ -429,11 +439,15 @@ const HotelOffers = () => {
     selected?.type === "debit" ? "debit" : "credit",
     "Redbus"
   );
+  const wMakeMyTrip = matchesFor(
+    makemytripOffers,
+    selected?.type === "debit" ? "debit" : "credit",
+    "MakeMyTrip"
+  ); // ✅ REAL MMT WRAPPERS
 
   // virtual sections
   const dIxigo = wAbhibus.map((w) => ({ ...w, site: "Ixigo" }));
   const dConfirmTkt = wAbhibus.map((w) => ({ ...w, site: "Confirmtkt" }));
-  const dMakeMyTrip = wRedbus.map((w) => ({ ...w, site: "MakeMyTrip" }));
 
   // GLOBAL dedup for real sources
   const seen = new Set();
@@ -443,11 +457,11 @@ const HotelOffers = () => {
   const dCleartrip = dedupWrappers(wCleartrip, seen);
   const dGoibibo = dedupWrappers(wGoibibo, seen);
   const dRedbus = dedupWrappers(wRedbus, seen);
+  const dMakeMyTrip = dedupWrappers(wMakeMyTrip, seen); // ✅ REAL MMT DEDUPED
 
   // VIRTUAL sections must not be removed because originals showed them
   const dIxigoDeduped = dedupWrappers(dIxigo, new Set());
   const dConfirmTktDeduped = dedupWrappers(dConfirmTkt, new Set());
-  const dMakeMyTripDeduped = dedupWrappers(dMakeMyTrip, new Set());
 
   const hasAny =
     dPermanent.length ||
@@ -455,9 +469,9 @@ const HotelOffers = () => {
     dCleartrip.length ||
     dGoibibo.length ||
     dRedbus.length ||
+    dMakeMyTrip.length || // ✅ INCLUDE MMT
     dIxigoDeduped.length ||
-    dConfirmTktDeduped.length ||
-    dMakeMyTripDeduped.length;
+    dConfirmTktDeduped.length;
 
   const handleChipClick = (name, type) => {
     const display = brandCanonicalize(getBase(name));
@@ -819,7 +833,7 @@ const HotelOffers = () => {
               width: "100%",
               maxHeight: "260px",
               overflowY: "auto",
-              border: "1px solid #ccc",
+              border: "1px solid " + "#ccc",
               borderRadius: "6px",
               backgroundColor: "#fff",
               position: "absolute",
@@ -941,11 +955,11 @@ const HotelOffers = () => {
                 </div>
               )}
 
-              {!!dMakeMyTripDeduped.length && (
+              {!!dMakeMyTrip.length && (
                 <div className="offer-group">
                   <h2>Offers on MakeMyTrip</h2>
                   <div className="offer-grid">
-                    {dMakeMyTripDeduped.map((w, i) => (
+                    {dMakeMyTrip.map((w, i) => (
                       <OfferCard key={`mmt-${i}`} wrapper={w} />
                     ))}
                   </div>
