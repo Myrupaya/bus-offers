@@ -572,7 +572,22 @@ const HotelOffers = () => {
             </div>
           )}
 
-          {desc && <p className="offer-desc">{desc}</p>}
+          {/* 🔹 DESCRIPTION IN SCROLLABLE CONTAINER */}
+          {desc && (
+            <div
+              style={{
+                maxHeight: "120px",
+                overflowY: "auto",
+                marginTop: "8px",
+                marginBottom: "8px",
+                paddingRight: "4px",
+              }}
+            >
+              <p className="offer-desc" style={{ margin: 0 }}>
+                {desc}
+              </p>
+            </div>
+          )}
 
           {link && (
             <button className="btn" onClick={() => window.open(link, "_blank")}>
@@ -605,7 +620,7 @@ const HotelOffers = () => {
           const fuzzy = isFuzzyNameMatch(trimmed, it.display);
 
           let s = baseScore;
-          if (inc) s += 2.0;   // strong boost if query is substring
+          if (inc) s += 2.0; // strong boost if query is substring
           if (fuzzy) s += 1.5; // boost typo-ish matches
 
           return { it, s, inc, fuzzy };
