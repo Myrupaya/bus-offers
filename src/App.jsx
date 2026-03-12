@@ -31,6 +31,7 @@ const MAX_SUGGESTIONS = 50;
 
 const SOURCE_CONFIGS = [
   { key: "abhibus", label: "Abhibus", file: "Abhibus.csv" },
+  { key: "confirmtkt", label: "Confirmtkt", file: "Confirmtkt.csv" },
   { key: "cleartrip", label: "Cleartrip", file: "Cleartrip.csv" },
   { key: "goibibo", label: "Goibibo", file: "goibibo.csv" },
   { key: "redbus", label: "Redbus", file: "redbus.csv" },
@@ -55,7 +56,7 @@ const FALLBACK_IMAGE_BY_SITE = {
   makemytrip:
     "https://cdn.gadgets360.com/pricee/assets/store/makemytrip-1200x800.png",
   confirmtkt:
-    "https://travelmail.in/wp-content/uploads/2018/07/ConfirmTkt-Logo.jpeg",
+    "http://www.tnhglobal.com/wp-content/uploads/2018/07/Confirmtkt-Logo-01.jpg",
   easemytrip:
     "https://upload.wikimedia.org/wikipedia/commons/1/13/Easemytrip.jpg",
   croma:
@@ -487,10 +488,6 @@ const HotelOffers = () => {
     ...w,
     site: "ixigo",
   }));
-  const dConfirmTkt = (realSiteMatches.abhibus || []).map((w) => ({
-    ...w,
-    site: "confirmtkt",
-  }));
 
   const seen = new Set();
   const dPermanent = dedupWrappers(wPermanent, seen);
@@ -501,13 +498,11 @@ const HotelOffers = () => {
   });
 
   const dIxigoDeduped = dedupWrappers(dIxigo, new Set());
-  const dConfirmTktDeduped = dedupWrappers(dConfirmTkt, new Set());
 
   const hasAny =
     dPermanent.length ||
     SOURCE_CONFIGS.some((src) => dedupedRealSiteMatches[src.key]?.length) ||
-    dIxigoDeduped.length ||
-    dConfirmTktDeduped.length;
+    dIxigoDeduped.length;
 
   const handleChipClick = (name, type) => {
     const display = brandCanonicalize(getBase(name));
@@ -1099,11 +1094,11 @@ const HotelOffers = () => {
                 </div>
               )}
 
-              {!!dConfirmTktDeduped.length && (
+              {!!dedupedRealSiteMatches.confirmtkt?.length && (
                 <div className="offer-group">
                   <h2>Offers on Confirmtkt</h2>
                   <div className="offer-grid">
-                    {dConfirmTktDeduped.map((w, i) => (
+                    {dedupedRealSiteMatches.confirmtkt.map((w, i) => (
                       <OfferCard key={`ctkt-${i}`} wrapper={w} />
                     ))}
                   </div>
