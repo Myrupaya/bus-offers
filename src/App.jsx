@@ -9,6 +9,7 @@ const LIST_FIELDS = {
   debit: ["Eligible Debit Cards", "Applicable Debit Cards"],
   upi: ["UPI"],
   netBanking: ["Net Banking", "NetBanking"],
+  nonPayment: ["Non-Payments-Offers"],
 
   title: ["Offer Title", "Title", "Offer Name", "Name of the sale"],
   image: ["Image", "Credit Card Image", "Offer Image", "image", "Image url of the logo"],
@@ -39,6 +40,7 @@ const SOURCE_CONFIGS = [
   { key: "croma", label: "Croma", file: "croma.csv" },
   { key: "reliance-digital", label: "Reliance Digital", file: "reliance-digital.csv" },
   { key: "easemytrip", label: "EaseMyTrip", file: "Easemytrip.csv" },
+  { key: "yatra", label: "Yatra", file: "Yatra.csv" },
 ];
 
 /** -------------------- FALLBACK IMAGES BY SITE -------------------- */
@@ -59,6 +61,8 @@ const FALLBACK_IMAGE_BY_SITE = {
     "http://www.tnhglobal.com/wp-content/uploads/2018/07/Confirmtkt-Logo-01.jpg",
   easemytrip:
     "https://upload.wikimedia.org/wikipedia/commons/1/13/Easemytrip.jpg",
+  yatra:
+    "https://www.traveltrendstoday.in/storage/posts/d8fc2d2042cd7b5637bec76ff2343102.jpg",
   croma:
     "https://www.google.com/s2/favicons?sz=256&domain=croma.com",
   "reliance-digital":
@@ -240,6 +244,15 @@ function handleImgError(e, siteKey) {
   } else {
     el.style.display = "none";
   }
+}
+
+function isTruthyOfferMarker(val) {
+  const s = String(val || "").trim().toLowerCase();
+  return !!s && !["no", "n", "false", "0"].includes(s);
+}
+
+function isGeneralOffer(o) {
+  return isTruthyOfferMarker(firstField(o, LIST_FIELDS.nonPayment));
 }
 
 const CATEGORY_LABELS = {
@@ -455,6 +468,11 @@ const HotelOffers = () => {
         list = splitList(firstField(o, LIST_FIELDS.netBanking));
       }
 
+      if (!list.length && isGeneralOffer(o)) {
+        out.push({ offer: o, site });
+        continue;
+      }
+
       for (const raw of list) {
         const base = brandCanonicalize(getBase(raw));
         if (toNorm(base) === selected.baseNorm) {
@@ -538,6 +556,7 @@ const HotelOffers = () => {
       "croma",
       "reliance-digital",
       "easemytrip",
+      "yatra",
     ].includes(siteKey);
 
     const { src: imgSrc, usingFallback } = wantsFallbackLogic
@@ -1072,6 +1091,19 @@ const HotelOffers = () => {
                 </div>
               )}
 
+              {SOURCE_CONFIGS.filter((src) => src.key !== "abhibus").map((src) =>
+                dedupedRealSiteMatches[src.key]?.length ? (
+                  <div className="offer-group" key={src.key}>
+                    <h2>Offers on {src.label}</h2>
+                    <div className="offer-grid">
+                      {dedupedRealSiteMatches[src.key].map((w, i) => (
+                        <OfferCard key={`${src.key}-${i}`} wrapper={w} />
+                      ))}
+                    </div>
+                  </div>
+                ) : null
+              )}
+
               {!!dedupedRealSiteMatches.abhibus?.length && (
                 <div className="offer-group">
                   <h2>Offers on Abhibus</h2>
@@ -1089,94 +1121,6 @@ const HotelOffers = () => {
                   <div className="offer-grid">
                     {dIxigoDeduped.map((w, i) => (
                       <OfferCard key={`ixi-${i}`} wrapper={w} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!!dedupedRealSiteMatches.confirmtkt?.length && (
-                <div className="offer-group">
-                  <h2>Offers on Confirmtkt</h2>
-                  <div className="offer-grid">
-                    {dedupedRealSiteMatches.confirmtkt.map((w, i) => (
-                      <OfferCard key={`ctkt-${i}`} wrapper={w} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!!dedupedRealSiteMatches.cleartrip?.length && (
-                <div className="offer-group">
-                  <h2>Offers on Cleartrip</h2>
-                  <div className="offer-grid">
-                    {dedupedRealSiteMatches.cleartrip.map((w, i) => (
-                      <OfferCard key={`ct-${i}`} wrapper={w} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!!dedupedRealSiteMatches.goibibo?.length && (
-                <div className="offer-group">
-                  <h2>Offers on Goibibo</h2>
-                  <div className="offer-grid">
-                    {dedupedRealSiteMatches.goibibo.map((w, i) => (
-                      <OfferCard key={`go-${i}`} wrapper={w} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!!dedupedRealSiteMatches.redbus?.length && (
-                <div className="offer-group">
-                  <h2>Offers on Redbus</h2>
-                  <div className="offer-grid">
-                    {dedupedRealSiteMatches.redbus.map((w, i) => (
-                      <OfferCard key={`rb-${i}`} wrapper={w} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!!dedupedRealSiteMatches.makemytrip?.length && (
-                <div className="offer-group">
-                  <h2>Offers on MakeMyTrip</h2>
-                  <div className="offer-grid">
-                    {dedupedRealSiteMatches.makemytrip.map((w, i) => (
-                      <OfferCard key={`mmt-${i}`} wrapper={w} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!!dedupedRealSiteMatches.croma?.length && (
-                <div className="offer-group">
-                  <h2>Offers on Croma</h2>
-                  <div className="offer-grid">
-                    {dedupedRealSiteMatches.croma.map((w, i) => (
-                      <OfferCard key={`croma-${i}`} wrapper={w} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!!dedupedRealSiteMatches["reliance-digital"]?.length && (
-                <div className="offer-group">
-                  <h2>Offers on Reliance Digital</h2>
-                  <div className="offer-grid">
-                    {dedupedRealSiteMatches["reliance-digital"].map((w, i) => (
-                      <OfferCard key={`rd-${i}`} wrapper={w} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!!dedupedRealSiteMatches.easemytrip?.length && (
-                <div className="offer-group">
-                  <h2>Offers on EaseMyTrip</h2>
-                  <div className="offer-grid">
-                    {dedupedRealSiteMatches.easemytrip.map((w, i) => (
-                      <OfferCard key={`emt-${i}`} wrapper={w} />
                     ))}
                   </div>
                 </div>
